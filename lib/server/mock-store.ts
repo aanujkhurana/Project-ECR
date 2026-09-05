@@ -1,9 +1,13 @@
 import "server-only";
 import type { Booking } from "@/lib/types";
 
-interface MockStore {
+export interface MockStore {
   bookings: Map<number, Booking>;
   nextBookingId: number;
+}
+
+export function createMockStore(): MockStore {
+  return { bookings: new Map<number, Booking>(), nextBookingId: 501 };
 }
 
 declare global {
@@ -11,19 +15,8 @@ declare global {
   var ecrMockStore: MockStore | undefined;
 }
 
-// Share state across imports in one process, including development module reloads.
-// Server restarts clear it; separate workers do not share it. This is a mock only.
+// Shared only within this server process; restarts clear it and workers diverge.
 export function getMockStore(): MockStore {
-  globalThis.ecrMockStore ??= {
-    bookings: new Map<number, Booking>(),
-    nextBookingId: 501,
-  };
-
+  globalThis.ecrMockStore ??= createMockStore();
   return globalThis.ecrMockStore;
-}
-
-const MOCK_LATENCY_MS = 350;
-
-export async function waitForMockApi(): Promise<void> {
-  await new Promise<void>((resolve) => setTimeout(resolve, MOCK_LATENCY_MS));
 }
