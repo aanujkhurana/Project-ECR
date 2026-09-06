@@ -61,7 +61,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
           Back to results
         </Link>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">Review your rental</h1>
-        <p className="mt-3 text-slate-600">Review the vehicle and rental dates, then check your customer details.</p>
+        <p className="mt-3 text-slate-600">Review the vehicle and rental dates, then enter your customer name to book.</p>
         <div className="mt-8 grid items-start gap-6 md:grid-cols-2">
           <BookingSummary
             vehicle={vehicle}
@@ -70,7 +70,13 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
             rentalDays={dates.days}
             estimatedTotal={estimatedTotal}
           />
-          <BookingForm key={JSON.stringify([vehicle.id, startDate, endDate])} />
+          <BookingForm
+            key={JSON.stringify([vehicle.id, startDate, endDate])}
+            vehicleId={vehicle.id}
+            startDate={startDate}
+            endDate={endDate}
+            resultsHref={resultsHref}
+          />
         </div>
       </div>
     </main>
