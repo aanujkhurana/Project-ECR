@@ -95,7 +95,7 @@ async function AvailabilityResults({ criteria }: { criteria: SearchCriteria }) {
   return (
     <VehicleResults
       vehicles={result.data}
-      hasFilters={Boolean(criteria.type || criteria.location)}
+      criteria={criteria}
     />
   );
 }

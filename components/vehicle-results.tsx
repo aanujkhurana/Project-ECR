@@ -1,12 +1,13 @@
 import { VehicleCard } from "@/components/vehicle-card";
-import type { AvailableVehicle } from "@/lib/types";
+import type { AvailableVehicle, SearchCriteria } from "@/lib/types";
 
 interface VehicleResultsProps {
   vehicles: readonly AvailableVehicle[];
-  hasFilters: boolean;
+  criteria: SearchCriteria;
 }
 
-export function VehicleResults({ vehicles, hasFilters }: VehicleResultsProps) {
+export function VehicleResults({ vehicles, criteria }: VehicleResultsProps) {
+  const hasFilters = Boolean(criteria.type || criteria.location);
   if (vehicles.length === 0) {
     return (
       <div>
@@ -20,6 +21,13 @@ export function VehicleResults({ vehicles, hasFilters }: VehicleResultsProps) {
     );
   }
 
+  const query = new URLSearchParams({
+    start_date: criteria.start_date,
+    end_date: criteria.end_date,
+  });
+  if (criteria.type) query.set("type", criteria.type);
+  if (criteria.location) query.set("location", criteria.location);
+
   return (
     <div>
       <h2 className="text-xl font-semibold">
@@ -29,7 +37,7 @@ export function VehicleResults({ vehicles, hasFilters }: VehicleResultsProps) {
       <ul className="mt-5 grid gap-4 sm:grid-cols-2">
         {vehicles.map((vehicle) => (
           <li key={vehicle.id}>
-            <VehicleCard vehicle={vehicle} />
+            <VehicleCard vehicle={vehicle} bookingHref={`/booking/${vehicle.id}?${query.toString()}`} />
           </li>
         ))}
       </ul>
