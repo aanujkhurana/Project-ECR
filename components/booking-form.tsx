@@ -2,6 +2,7 @@
 
 import { useId, useRef, useState, type SubmitEvent } from "react";
 
+import { useRouter } from "next/navigation";
 import { createBooking } from "@/lib/api/bookings";
 import type { CreateBookingResponse } from "@/lib/types";
 
@@ -18,6 +19,7 @@ type SubmissionState =
   | { status: "conflict" | "error"; message: string };
 
 export function BookingForm({ vehicleId, startDate, endDate, resultsHref }: BookingFormProps) {
+  const router = useRouter();
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
   const [customerName, setCustomerName] = useState("");
@@ -44,6 +46,7 @@ export function BookingForm({ vehicleId, startDate, endDate, resultsHref }: Book
     if (result.ok) {
       // Keep this form locked after confirmation; a second booking is a new journey.
       setState({ status: "success", booking: result.data });
+      router.replace(`/booking/confirmation/${result.data.booking_id}`);
       return;
     }
     submissionLocked.current = false;
