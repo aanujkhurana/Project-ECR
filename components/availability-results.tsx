@@ -31,16 +31,14 @@ export function AvailabilityResults({ criteria }: { criteria: SearchCriteria }) 
   }, [criteria]);
 
   if (state.status === "loading") {
-    return <p role="status">Searching vehicle availability…</p>;
+    return <p role="status" className="feedback text-muted">Searching vehicle availability…</p>;
   }
   if (state.status === "error") {
     return (
-      <div className="rounded-lg border border-red-200 bg-white p-4 text-slate-900">
-        <h2 className="text-lg font-semibold">We couldn’t load availability</h2>
-        <p role="alert" className="mt-2">{state.message}</p>
-        <a href="#search-form" className="mt-3 inline-flex min-h-11 items-center underline underline-offset-4">
-          Adjust search
-        </a>
+      <div className="feedback feedback-error">
+        <h2 className="section-title">We couldn’t load availability</h2>
+        <p role="alert" className="mt-2 text-muted">{state.message}</p>
+        <a href="#search-form" className="text-link mt-3">Adjust search</a>
       </div>
     );
   }

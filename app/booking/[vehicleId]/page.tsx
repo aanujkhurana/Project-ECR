@@ -17,6 +17,8 @@ interface BookingPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
+// Resolve the vehicle and pricing on the server, then pass serializable props
+// to the interactive form. Loading this page does not reserve the vehicle.
 export default async function BookingPage({ params, searchParams }: BookingPageProps) {
   const [{ vehicleId }, query] = await Promise.all([params, searchParams]);
   const id = Number(vehicleId);
@@ -36,13 +38,13 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
 
   if (!dates.valid) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900 sm:px-6">
-        <div className="mx-auto max-w-3xl">
-          <h1 className="text-2xl font-semibold">Check your rental dates</h1>
-          <p role="alert" className="mt-3 text-slate-600">
+      <main id="main-content" tabIndex={-1} className="page-shell">
+        <div className="content-width max-w-5xl">
+          <h1 className="section-title">Check your rental dates</h1>
+          <p role="alert" className="mt-3 text-muted">
             {Object.values(dates.errors).join(" ")}
           </p>
-          <Link href={resultsHref} className="mt-5 inline-flex min-h-11 items-center underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">
+          <Link href={resultsHref} className="text-link mt-5">
             Back to results to update dates
           </Link>
         </div>
@@ -55,13 +57,13 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
   const estimatedTotal = calculateRentalTotal(vehicle.daily_rate, dates.days);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900 sm:px-6 sm:py-16">
-      <div className="mx-auto max-w-5xl">
-        <Link href={resultsHref} className="inline-flex min-h-11 items-center underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">
+    <main id="main-content" tabIndex={-1} className="page-shell">
+      <div className="content-width max-w-5xl">
+        <Link href={resultsHref} className="text-link">
           Back to results
         </Link>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight">Review your rental</h1>
-        <p className="mt-3 text-slate-600">Review the vehicle and rental dates, then enter your customer name to book.</p>
+        <h1 className="mt-4 page-title">Review your rental</h1>
+        <p className="page-description">Review the vehicle and rental dates, then enter your customer name to book.</p>
         <div className="mt-8 grid items-start gap-6 md:grid-cols-2">
           <BookingSummary
             vehicle={vehicle}

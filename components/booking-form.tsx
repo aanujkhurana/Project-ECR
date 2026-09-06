@@ -19,13 +19,17 @@ type SubmissionState =
   | { status: "success"; booking: CreateBookingResponse }
   | { status: "invalid" | "conflict" | "error"; message: string };
 
+// Validation feedback, focus and submission state belong to this client interaction.
+// Mutations cross the HTTP helper; server inventory never enters this component.
 export function BookingForm({ vehicleId, startDate, endDate, resultsHref }: BookingFormProps) {
   const router = useRouter();
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
   const [customerName, setCustomerName] = useState("");
   const [state, setState] = useState<SubmissionState>({ status: "idle" });
-  // Synchronous guard covers rapid submissions before React renders disabled.
+  // The ref blocks repeated events before React renders the disabled button.
+  // It protects this form only, not retries across clients or reloads; production
+  // booking APIs still need server-side idempotency.
   const submissionLocked = useRef(false);
   const disabled = state.status === "submitting" || state.status === "success";
 
@@ -51,6 +55,8 @@ export function BookingForm({ vehicleId, startDate, endDate, resultsHref }: Book
       router.replace(`/booking/confirmation/${result.data.booking_id}`);
       return;
     }
+    // The booking response overrides the earlier availability snapshot. A conflict
+    // stays on this page with a recovery action and must never reach confirmation.
     submissionLocked.current = false;
     setState({
       status: result.error.error === "vehicle_unavailable" ? "conflict" : "error",
@@ -64,13 +70,13 @@ export function BookingForm({ vehicleId, startDate, endDate, resultsHref }: Book
       method="post"
       noValidate
       aria-labelledby={`${id}-heading`}
-      className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6"
+      className="panel"
     >
-      <h2 id={`${id}-heading`} className="text-xl font-semibold">Customer details</h2>
-      <p className="mt-3 text-sm text-slate-600">
-        Your booking is confirmed only when we receive a successful response.
+      <h2 id={`${id}-heading`} className="section-title">Customer details</h2>
+      <p className="mt-3 text-sm text-muted">
+        Enter the name for your reservation. We’ll confirm availability when you book.
       </p>
-      <label htmlFor={`${id}-name`} className="mt-6 block font-medium">Customer name</label>
+      <label htmlFor={`${id}-name`} className="field-label mt-6">Customer name</label>
       <input
         ref={input}
         id={`${id}-name`}
@@ -87,27 +93,28 @@ export function BookingForm({ vehicleId, startDate, endDate, resultsHref }: Book
         }}
         aria-invalid={state.status === "invalid"}
         aria-describedby={state.status === "invalid" ? `${id}-error` : undefined}
-        className="mt-2 block min-h-11 w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+        className="field-control"
       />
       {state.status === "invalid" && (
-        <p id={`${id}-error`} role="alert" className="mt-2 text-sm text-red-700">{state.message}</p>
+        <p id={`${id}-error`} role="alert" className="field-error">{state.message}</p>
       )}
       <button
         type="submit"
         disabled={disabled}
-        className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-slate-900 px-5 py-3 font-semibold text-white hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-700 sm:w-auto disabled:cursor-not-allowed disabled:opacity-60"
+        className="button button-primary mt-6 w-full"
       >
-        {state.status === "submitting" ? "Creating booking…" : state.status === "success" ? "Booking confirmed" : "Book vehicle"}
+        {state.status === "submitting" ? "Confirming…" : state.status === "success" ? "Booking confirmed" : "Confirm booking"}
       </button>
-      <p role="status" className="mt-4 text-sm text-slate-700">
+      <p role="status" className="mt-4 text-sm text-muted empty:mt-0">
         {state.status === "submitting" && "Creating your booking. Please wait…"}
         {state.status === "success" && `Booking confirmed. Booking ID: ${state.booking.booking_id}`}
       </p>
       {(state.status === "conflict" || state.status === "error") && (
-        <div className="mt-4 text-sm">
-          <p role="alert" className="text-red-700">{state.message}</p>
+        <div className={`feedback mt-6 text-sm ${state.status === "conflict" ? "feedback-warning" : "feedback-error"}`}>
+          <h3 className="font-semibold">{state.status === "conflict" ? "Vehicle no longer available" : "We couldn’t confirm your booking"}</h3>
+          <p role="alert" className="mt-2 text-muted">{state.message}</p>
           {/* Reload availability instead of returning to a cached results snapshot. */}
-          <a href={resultsHref} className="mt-2 inline-flex min-h-11 items-center underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">
+          <a href={resultsHref} className="text-link mt-3">
             Return to results and choose a vehicle
           </a>
         </div>

@@ -44,15 +44,20 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
   ).valid;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900 sm:px-6 sm:py-16">
-      <div className="mx-auto max-w-3xl">
-        <p className="mb-3 text-sm font-semibold text-slate-600">East Coast Car Rentals</p>
-        <h1 className="text-3xl font-semibold tracking-tight">Search vehicles</h1>
-        <p className="mt-3 text-slate-600">
-          Choose your rental dates. Vehicle type and pickup location are optional.
-        </p>
+    <main id="main-content" tabIndex={-1} className="page-shell">
+      <div className="content-width">
+        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div>
+            <p className="eyebrow mb-3">Explore Queensland</p>
+            <h1 className="page-title">Search vehicles</h1>
+            <p className="page-description">
+              Find the right car for your next trip. Choose your dates to get started.
+            </p>
+          </div>
+          <p className="shrink-0 text-sm text-muted">Compare daily rates in AUD</p>
+        </div>
         {clearedValues && (
-          <p className="mt-4 text-sm text-slate-700" role="status">
+          <p className="feedback feedback-warning mt-6 text-sm" role="status">
             Some search details were invalid and have been cleared. Please check the form.
           </p>
         )}
@@ -61,16 +66,31 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
           initialValues={initialValues}
           today={today}
         />
-        <section aria-label="Vehicle availability" className="mt-10">
+        <section aria-label="Vehicle availability" className="mt-10 sm:mt-12">
           {canSearch ? (
             <AvailabilityResults
               key={JSON.stringify(criteria)}
               criteria={criteria}
             />
           ) : (
-            <p className="text-slate-600">
-              Enter valid rental dates and check any filters to search vehicle availability.
-            </p>
+            <div>
+              <h2 className="section-title">A few steps to your next trip</h2>
+              <ol className="mt-6 grid gap-6 sm:grid-cols-3">
+                {[
+                  ["Choose your dates", "Set your rental period, then narrow your search by vehicle type or pickup location."],
+                  ["Find your vehicle", "Compare available cars and daily rates to find the right fit."],
+                  ["Review and book", "Check your rental total before confirming your booking."],
+                ].map(([title, description], index) => (
+                  <li key={title} className="flex items-start gap-4">
+                    <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent">{index + 1}</span>
+                    <div>
+                      <h3 className="text-base font-semibold">{title}</h3>
+                      <p className="mt-2 text-sm text-muted">{description}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
           )}
         </section>
       </div>

@@ -20,12 +20,10 @@ interface SearchFormProps {
 
 type DateErrors = { start_date?: string; end_date?: string };
 
-const inputClassName =
-  "mt-2 block min-h-11 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700";
-
 export function SearchForm({ initialValues, today }: SearchFormProps) {
   const router = useRouter();
   const id = useId();
+  // The parent keys this form by URL values, resetting drafts on back/forward navigation.
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<DateErrors>(() => {
     if (!initialValues.start_date && !initialValues.end_date) return {};
@@ -50,6 +48,9 @@ export function SearchForm({ initialValues, today }: SearchFormProps) {
     }
 
     setErrors({});
+    // Apply start_date, end_date, type and location as navigation state. The URL
+    // preserves searches for refresh, sharing and history; unsaved edits stay local,
+    // so there is no separate global search store to keep in sync.
     const query = new URLSearchParams({
       start_date: values.start_date,
       end_date: values.end_date,
@@ -63,10 +64,17 @@ export function SearchForm({ initialValues, today }: SearchFormProps) {
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="mt-8 grid gap-5 rounded-xl border border-slate-200 bg-white p-5 sm:grid-cols-2 sm:p-6"
+      id="search-form"
+      tabIndex={-1}
+      aria-label="Vehicle search"
+      className="panel search-panel"
     >
+      <div className="col-span-full flex flex-wrap items-center justify-between gap-2 border-b border-line pb-4">
+        <h2 className="text-base font-semibold">Your rental details</h2>
+        <p className="text-sm text-muted">Start and end dates are required</p>
+      </div>
       <div className="min-w-0">
-        <label htmlFor={`${id}-start`} className="font-medium">Start date</label>
+        <label htmlFor={`${id}-start`} className="field-label">Start date</label>
         <input
           id={`${id}-start`}
           name="start_date"
@@ -77,16 +85,16 @@ export function SearchForm({ initialValues, today }: SearchFormProps) {
           onChange={(event) => updateField("start_date", event.target.value)}
           aria-invalid={Boolean(errors.start_date)}
           aria-describedby={errors.start_date ? `${id}-start-error` : undefined}
-          className={inputClassName}
+          className="field-control"
         />
         {errors.start_date && (
-          <p id={`${id}-start-error`} role="alert" className="mt-2 text-sm text-red-700">
+          <p id={`${id}-start-error`} role="alert" className="field-error">
             {errors.start_date}
           </p>
         )}
       </div>
       <div className="min-w-0">
-        <label htmlFor={`${id}-end`} className="font-medium">End date</label>
+        <label htmlFor={`${id}-end`} className="field-label">End date</label>
         <input
           id={`${id}-end`}
           name="end_date"
@@ -97,22 +105,22 @@ export function SearchForm({ initialValues, today }: SearchFormProps) {
           onChange={(event) => updateField("end_date", event.target.value)}
           aria-invalid={Boolean(errors.end_date)}
           aria-describedby={errors.end_date ? `${id}-end-error` : undefined}
-          className={inputClassName}
+          className="field-control"
         />
         {errors.end_date && (
-          <p id={`${id}-end-error`} role="alert" className="mt-2 text-sm text-red-700">
+          <p id={`${id}-end-error`} role="alert" className="field-error">
             {errors.end_date}
           </p>
         )}
       </div>
       <div>
-        <label htmlFor={`${id}-type`} className="font-medium">Vehicle type (optional)</label>
+        <label htmlFor={`${id}-type`} className="field-label">Vehicle type (optional)</label>
         <select
           id={`${id}-type`}
           name="type"
           value={values.type}
           onChange={(event) => updateField("type", event.target.value)}
-          className={inputClassName}
+          className="field-control"
         >
           <option value="">All vehicle types</option>
           {VEHICLE_TYPES.map((type) => (
@@ -121,13 +129,13 @@ export function SearchForm({ initialValues, today }: SearchFormProps) {
         </select>
       </div>
       <div>
-        <label htmlFor={`${id}-location`} className="font-medium">Location (optional)</label>
+        <label htmlFor={`${id}-location`} className="field-label">Location (optional)</label>
         <select
           id={`${id}-location`}
           name="location"
           value={values.location}
           onChange={(event) => updateField("location", event.target.value)}
-          className={inputClassName}
+          className="field-control"
         >
           <option value="">All locations</option>
           {RENTAL_LOCATIONS.map((location) => (
@@ -137,7 +145,7 @@ export function SearchForm({ initialValues, today }: SearchFormProps) {
       </div>
       <button
         type="submit"
-        className="inline-flex min-h-11 items-center justify-center rounded-lg bg-slate-900 px-5 py-3 font-semibold text-white hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-700 sm:col-span-2 sm:justify-self-start"
+        className="button button-primary sm:col-span-2 lg:col-span-1"
       >
         Search vehicles
       </button>

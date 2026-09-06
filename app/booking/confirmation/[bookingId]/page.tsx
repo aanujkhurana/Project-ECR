@@ -18,20 +18,30 @@ export default async function BookingConfirmationPage({ params }: {
   const id = Number(bookingId);
   if (!/^[1-9]\d*$/.test(bookingId) || !Number.isSafeInteger(id)) notFound();
 
-  // Internal mock lookup: the supplied contract has no public GET booking API.
-  // Refresh works in this process; a restart loses these records.
+  // The normal flow navigates here with the ID from a validated successful POST.
+  // Direct visits and refreshes must still resolve a stored booking, never infer success.
+  // This internal lookup supports the mock; the brief has no public GET booking API.
   const booking = await getBooking(id);
   if (!booking) notFound();
   const vehicle = await getRentalService().getVehicle(booking.vehicle_id);
   if (!vehicle) throw new Error("Booked vehicle could not be loaded.");
   const days = getRentalDays(booking.start_date, booking.end_date);
+  // Use the booked rate so later fleet price changes do not rewrite this estimate.
   const total = calculateRentalTotal(booking.daily_rate, days);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900 sm:px-6 sm:py-16">
-      <div className="mx-auto max-w-5xl">
-        <h1 className="text-3xl font-semibold tracking-tight">Booking details</h1>
-        <p className="mt-3 text-lg">Booking ID: <strong>{booking.booking_id}</strong></p>
+    <main id="main-content" tabIndex={-1} className="page-shell">
+      <div className="content-width max-w-5xl">
+        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div>
+            <p className="eyebrow mb-3">Your reservation</p>
+            <h1 className="page-title">Booking details</h1>
+            <p className="page-description">Your reservation status and rental details, all in one place.</p>
+          </div>
+          <p className="w-fit shrink-0 rounded-xl border border-line bg-surface px-5 py-3 text-sm text-muted">
+            Booking ID: <strong className="ml-1 text-base text-ink tabular-nums">{booking.booking_id}</strong>
+          </p>
+        </div>
         <div className="mt-8 grid items-start gap-6 md:grid-cols-2">
           <BookingCancellation key={booking.booking_id} bookingId={booking.booking_id} initialStatus={booking.status} />
           <BookingSummary
