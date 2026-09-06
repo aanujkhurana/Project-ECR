@@ -19,6 +19,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(bookingId)) {
       return failure("invalid_request");
     }
+    // The service owns the status transition; this handler validates the path and
+    // maps its outcome to HTTP. DELETE here does not remove the stored record.
     const result = await getRentalService().cancelBooking(bookingId);
     if (!result.ok) {
       const error = result.error.error;

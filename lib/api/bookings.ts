@@ -2,6 +2,7 @@ import type { RentalResult } from "@/lib/api/rental-service";
 import type { BookingRequest, CancelBookingResponse, CreateBookingResponse } from "@/lib/types";
 
 // This module is browser-safe: HTTP details stay outside the form component.
+// Customer names travel in the POST body, never in navigable URL state.
 export async function createBooking(request: BookingRequest): Promise<RentalResult<CreateBookingResponse>> {
   try {
     const response = await fetch("/api/bookings", {
@@ -10,6 +11,8 @@ export async function createBooking(request: BookingRequest): Promise<RentalResu
       body: JSON.stringify(request),
     });
     const body: unknown = await response.json();
+    // HTTP success alone is insufficient: require the booking ID, confirmed status
+    // and matching rental details before the form can navigate to confirmation.
     if (body && typeof body === "object" && !Array.isArray(body)) {
       if (
         response.status === 201 &&

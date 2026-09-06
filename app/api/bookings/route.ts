@@ -6,16 +6,20 @@ import type { ApiErrorResponse, BookingRequest, CreateBookingResponse } from "@/
 const failures: Record<ApiErrorResponse["error"], { status: number; message: string }> = {
   invalid_request: { status: 400, message: "Please check the vehicle, rental dates and customer name." },
   not_found: { status: 404, message: "This vehicle could not be found." },
+  // A valid booking request can conflict with current inventory without being invalid input.
   vehicle_unavailable: { status: 409, message: "This vehicle was booked by another customer" },
   internal_error: { status: 500, message: "We couldn't complete the booking. Please try again." },
 };
 
+// Use allowlisted messages instead of forwarding service diagnostics or customer data.
 function failure(error: ApiErrorResponse["error"]) {
   const { status, message } = failures[error];
   return Response.json({ error, message }, { status });
 }
 
 export async function POST(request: Request) {
+  // TypeScript cannot validate incoming JSON. Check shape and shared input rules
+  // here before passing typed data to the service, even if the browser validated it.
   let body: unknown;
   try {
     body = await request.json();

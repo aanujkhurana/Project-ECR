@@ -44,6 +44,7 @@ export function createMockRentalService({
     return result.valid ? null : Object.values(result.errors).join(" ");
   }
 
+  // End dates are exclusive: a rental may start on another rental's return date.
   function hasOverlap(vehicleId: number, startDate: string, endDate: string) {
     return Array.from(store.bookings.values()).some(
       (booking) =>
@@ -111,7 +112,10 @@ export function createMockRentalService({
           error: { error: "internal_error", message: "We couldn't complete your booking. Please try again." },
         };
       }
-      // No await between the authoritative check and insertion in this process.
+      // Search is only a snapshot; another customer may have booked since that read.
+      // Recheck immediately before insertion with no await between check and write,
+      // preventing overlapping bookings that share this process and store. Production
+      // needs durable shared storage with an atomic reservation transaction or constraint.
       if (scenarios.booking === "conflict" || hasOverlap(vehicle.id, request.start_date, request.end_date)) {
         return {
           ok: false,
@@ -158,6 +162,7 @@ export function createMockRentalService({
           error: { error: "internal_error", message: "We couldn't cancel your booking. Please try again." },
         };
       }
+      // Retain the record for confirmation/history; only confirmed records block availability.
       // Repeated cancellation has the same result and releases no extra inventory.
       store.bookings.set(bookingId, { ...booking, status: "cancelled" });
       return { ok: true, data: { booking_id: bookingId, status: "cancelled" } };

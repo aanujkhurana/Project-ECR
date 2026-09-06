@@ -15,6 +15,8 @@ export type RentalResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: RentalServiceError };
 
+// The service owns rental rules; Route Handlers own parsing, status codes and JSON.
+// Keeping HTTP and store details out of this contract lets server pages use it directly.
 export interface RentalService {
   getAvailableVehicles(criteria: SearchCriteria): Promise<RentalResult<AvailableVehicle[]>>;
   // Internal vehicle-detail lookup; not an additional endpoint in the brief.

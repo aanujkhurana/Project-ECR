@@ -1,4 +1,5 @@
-// Rates are AUD amounts. Normalize each daily rate to cents before multiplying.
+// Normalize AUD rates to integer cents before multiplying, avoiding accumulated
+// floating-point dollar errors. Convert back to dollars only for the returned total.
 export function calculateRentalTotal(dailyRate: number, rentalDays: number): number {
   if (!Number.isFinite(dailyRate) || dailyRate < 0) {
     throw new RangeError("Daily rate must be a finite, non-negative amount.");

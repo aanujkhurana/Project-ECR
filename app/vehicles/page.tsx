@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { AvailabilityResults } from "@/components/availability-results";
 import { SearchForm, type SearchFormValues } from "@/components/search-form";
-import { VehicleResults } from "@/components/vehicle-results";
 import { getTodayInBrisbane, isValidDate, validateDateRange } from "@/lib/dates";
-import { getRentalService } from "@/lib/server/get-rental-service";
 import { RENTAL_LOCATIONS, VEHICLE_TYPES, type SearchCriteria } from "@/lib/types";
 
 export const metadata: Metadata = {
@@ -14,6 +12,8 @@ interface VehiclesPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
+// Resolve URL criteria on the server. The results component sends valid criteria
+// through the supplied availability HTTP contract from the browser.
 export default async function VehiclesPage({ searchParams }: VehiclesPageProps) {
   const query = await searchParams;
   const today = getTodayInBrisbane();
@@ -63,12 +63,10 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
         />
         <section aria-label="Vehicle availability" className="mt-10">
           {canSearch ? (
-            <Suspense
+            <AvailabilityResults
               key={JSON.stringify(criteria)}
-              fallback={<p role="status">Searching vehicle availability…</p>}
-            >
-              <AvailabilityResults criteria={criteria} />
-            </Suspense>
+              criteria={criteria}
+            />
           ) : (
             <p className="text-slate-600">
               Enter valid rental dates and check any filters to search vehicle availability.
@@ -77,25 +75,5 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
         </section>
       </div>
     </main>
-  );
-}
-
-// Fetch inside the boundary so the search form can render before availability.
-async function AvailabilityResults({ criteria }: { criteria: SearchCriteria }) {
-  const result = await getRentalService().getAvailableVehicles(criteria);
-  if (!result.ok) {
-    return (
-      <p role="alert" className="rounded-lg border border-red-200 bg-white p-4 text-slate-900">
-        {result.error.error === "invalid_request"
-          ? "Please check your rental dates and filters, then search again."
-          : "We couldn't load vehicle availability. Please try searching again."}
-      </p>
-    );
-  }
-  return (
-    <VehicleResults
-      vehicles={result.data}
-      criteria={criteria}
-    />
   );
 }

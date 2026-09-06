@@ -4,6 +4,8 @@ export type DateRangeValidation =
   | { valid: true; days: number }
   | { valid: false; errors: { start_date?: string; end_date?: string } };
 
+// Rentals use date-only values, not pickup timestamps. UTC midnight is an
+// arithmetic reference so subtracting dates is unaffected by local DST offsets.
 function parseCalendarDate(value: string): number | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
 
@@ -20,6 +22,7 @@ export function isValidDate(value: string): boolean {
   return parseCalendarDate(value) !== null;
 }
 
+// Apply the rental location's calendar day even when the browser or server is elsewhere.
 export function getTodayInBrisbane(now: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat("en-AU", {
     timeZone: "Australia/Brisbane",
@@ -33,7 +36,8 @@ export function getTodayInBrisbane(now: Date = new Date()): string {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
-// Past dates remain valid for calculating an existing booking's duration.
+// Duration is independent of new-rental validation and reusable outside the UI.
+// Existing bookings still need a duration after their dates have passed.
 export function getRentalDays(startDate: string, endDate: string): number {
   const start = parseCalendarDate(startDate);
   const end = parseCalendarDate(endDate);
@@ -43,6 +47,8 @@ export function getRentalDays(startDate: string, endDate: string): number {
   return (end - start) / MILLISECONDS_PER_DAY;
 }
 
+// New rentals must start today or later and last at least one calendar day.
+// Callers supply Brisbane today so the same rule can use a fixed clock in tests.
 export function validateDateRange(
   startDate: string,
   endDate: string,

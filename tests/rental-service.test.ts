@@ -5,6 +5,8 @@ import type { SearchCriteria } from "@/lib/types";
 
 const dates = { start_date: "2030-09-10", end_date: "2030-09-13" };
 const request = { ...dates, vehicle_id: 12, customer_name: "  Test Customer  " };
+// Fresh stores prevent inventory leaking between cases; a fixed clock keeps dates
+// valid regardless of when the suite runs. Zero delay still exercises the async boundary.
 function service(options: Parameters<typeof createMockRentalService>[0] = {}) {
   return createMockRentalService({
     store: createMockStore(), delayMs: 0, now: () => new Date("2030-09-10T00:00:00Z"), ...options,

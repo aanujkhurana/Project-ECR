@@ -5,12 +5,15 @@ import { getRentalService } from "@/lib/server/get-rental-service";
 import { createMockRentalService } from "@/lib/server/rental-service";
 import { createMockStore } from "@/lib/server/mock-store";
 
+// Exercise the actual handlers with an isolated mock rental service. Replacing only
+// its provider keeps request validation, contract projection and status mapping under test.
 vi.mock("@/lib/server/get-rental-service", () => ({ getRentalService: vi.fn() }));
 const request = { vehicle_id: 12, start_date: "2030-09-10", end_date: "2030-09-13", customer_name: "  Test Customer  " };
 let rental: ReturnType<typeof createMockRentalService>;
 const post = (body: unknown) => POST(new Request("http://localhost/api/bookings", { method: "POST", body: JSON.stringify(body) }));
 const remove = (id: string) => DELETE(new Request(`http://localhost/api/bookings/${id}`, { method: "DELETE" }), { params: Promise.resolve({ id }) });
 beforeEach(() => {
+  // Give HTTP and service validation the same fixed today so tests never age out.
   // Freeze only Date; real timers keep the async mock service running normally.
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2030-09-10T00:00:00Z"));
