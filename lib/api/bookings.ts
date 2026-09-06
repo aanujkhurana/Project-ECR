@@ -1,5 +1,5 @@
 import type { RentalResult } from "@/lib/api/rental-service";
-import type { BookingRequest, CreateBookingResponse } from "@/lib/types";
+import type { BookingRequest, CancelBookingResponse, CreateBookingResponse } from "@/lib/types";
 
 // This module is browser-safe: HTTP details stay outside the form component.
 export async function createBooking(request: BookingRequest): Promise<RentalResult<CreateBookingResponse>> {
@@ -49,5 +49,38 @@ export async function createBooking(request: BookingRequest): Promise<RentalResu
   }
   return { ok: false, error: {
     error: "internal_error", message: "We couldn't confirm the booking. Please try again.",
+  } };
+}
+
+export async function cancelBooking(bookingId: number): Promise<RentalResult<CancelBookingResponse>> {
+  try {
+    const response = await fetch(`/api/bookings/${bookingId}`, { method: "DELETE" });
+    const body: unknown = await response.json();
+    if (body && typeof body === "object" && !Array.isArray(body)) {
+      if (
+        response.status === 200 &&
+        "booking_id" in body && body.booking_id === bookingId &&
+        "status" in body && body.status === "cancelled"
+      ) {
+        return { ok: true, data: { booking_id: body.booking_id, status: body.status } };
+      }
+      if ("error" in body) {
+        if (response.status === 404 && body.error === "not_found") {
+          return { ok: false, error: {
+            error: "not_found", message: "This booking could not be found. Please check the booking link.",
+          } };
+        }
+        if (response.status === 400 && body.error === "invalid_request") {
+          return { ok: false, error: {
+            error: "invalid_request", message: "This booking link is invalid. Please check the booking ID.",
+          } };
+        }
+      }
+    }
+  } catch {
+    // A lost or malformed response cannot establish that cancellation succeeded.
+  }
+  return { ok: false, error: {
+    error: "internal_error", message: "We couldn't confirm the cancellation. Please try again.",
   } };
 }

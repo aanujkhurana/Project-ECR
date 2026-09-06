@@ -5,11 +5,13 @@ import { createMockRentalService, rentalService } from "@/lib/server/rental-serv
 // Only this wiring module selects the implementation and its demo configuration.
 // ECR_MOCK_AVAILABILITY_ERROR=1 reproduces an availability failure.
 // ECR_MOCK_BOOKING_SCENARIO=conflict (or error) reproduces booking failures.
+// ECR_MOCK_CANCELLATION_ERROR=1 reproduces a cancellation failure.
 export function getRentalService(): RentalService {
   const availability = process.env.ECR_MOCK_AVAILABILITY_ERROR === "1" ? "error" : undefined;
   const scenario = process.env.ECR_MOCK_BOOKING_SCENARIO;
   const booking = scenario === "conflict" || scenario === "error" ? scenario : undefined;
-  return availability || booking
-    ? createMockRentalService({ scenarios: { availability, booking } })
+  const cancellation = process.env.ECR_MOCK_CANCELLATION_ERROR === "1" ? "error" : undefined;
+  return availability || booking || cancellation
+    ? createMockRentalService({ scenarios: { availability, booking, cancellation } })
     : rentalService;
 }

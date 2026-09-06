@@ -6,13 +6,14 @@ interface BookingSummaryProps {
   endDate: string;
   rentalDays: number;
   estimatedTotal: number;
+  priceNote?: string;
 }
 
 const currency = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 // Format an already-validated calendar date without a timezone conversion.
 const formatDate = (value: string) => value.split("-").reverse().join("/");
 
-export function BookingSummary({ vehicle, startDate, endDate, rentalDays, estimatedTotal }: BookingSummaryProps) {
+export function BookingSummary({ vehicle, startDate, endDate, rentalDays, estimatedTotal, priceNote = "Estimate based on the current daily rate." }: BookingSummaryProps) {
   return (
     <section aria-labelledby="rental-summary-heading" className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
       <h2 id="rental-summary-heading" className="text-xl font-semibold">Rental summary</h2>
@@ -40,7 +41,7 @@ export function BookingSummary({ vehicle, startDate, endDate, rentalDays, estima
           <dd>{currency.format(estimatedTotal)} AUD</dd>
         </div>
       </dl>
-      <p className="mt-4 text-sm text-slate-600">Estimate based on the current daily rate.</p>
+      <p className="mt-4 text-sm text-slate-600">{priceNote}</p>
     </section>
   );
 }
