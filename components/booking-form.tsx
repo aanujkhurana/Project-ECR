@@ -4,6 +4,7 @@ import { useId, useRef, useState, type SubmitEvent } from "react";
 
 import { useRouter } from "next/navigation";
 import { createBooking } from "@/lib/api/bookings";
+import { getCustomerNameError, MAX_CUSTOMER_NAME_LENGTH } from "@/lib/customer-name";
 import type { CreateBookingResponse } from "@/lib/types";
 
 interface BookingFormProps {
@@ -14,9 +15,9 @@ interface BookingFormProps {
 }
 
 type SubmissionState =
-  | { status: "idle" | "invalid" | "submitting" }
+  | { status: "idle" | "submitting" }
   | { status: "success"; booking: CreateBookingResponse }
-  | { status: "conflict" | "error"; message: string };
+  | { status: "invalid" | "conflict" | "error"; message: string };
 
 export function BookingForm({ vehicleId, startDate, endDate, resultsHref }: BookingFormProps) {
   const router = useRouter();
@@ -33,8 +34,9 @@ export function BookingForm({ vehicleId, startDate, endDate, resultsHref }: Book
     if (submissionLocked.current) return;
     const trimmedName = customerName.trim();
     setCustomerName(trimmedName);
-    if (!trimmedName) {
-      setState({ status: "invalid" });
+    const nameError = getCustomerNameError(trimmedName);
+    if (nameError) {
+      setState({ status: "invalid", message: nameError });
       input.current?.focus();
       return;
     }
@@ -76,6 +78,7 @@ export function BookingForm({ vehicleId, startDate, endDate, resultsHref }: Book
         type="text"
         autoComplete="name"
         required
+        maxLength={MAX_CUSTOMER_NAME_LENGTH}
         value={customerName}
         disabled={disabled}
         onChange={(event) => {
@@ -87,7 +90,7 @@ export function BookingForm({ vehicleId, startDate, endDate, resultsHref }: Book
         className="mt-2 block min-h-11 w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
       />
       {state.status === "invalid" && (
-        <p id={`${id}-error`} role="alert" className="mt-2 text-sm text-red-700">Enter your name.</p>
+        <p id={`${id}-error`} role="alert" className="mt-2 text-sm text-red-700">{state.message}</p>
       )}
       <button
         type="submit"

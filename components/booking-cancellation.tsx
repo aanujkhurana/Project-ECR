@@ -15,6 +15,7 @@ export function BookingCancellation({ bookingId, initialStatus }: {
 }) {
   const router = useRouter();
   const requestLocked = useRef(false);
+  const searchLink = useRef<HTMLAnchorElement>(null);
   const [state, setState] = useState<CancellationState>({ status: "idle" });
   const cancelled = initialStatus === "cancelled" || state.status === "cancelled";
 
@@ -26,6 +27,7 @@ export function BookingCancellation({ bookingId, initialStatus }: {
     const result = await cancelBooking(bookingId);
     if (result.ok) {
       setState({ status: "cancelled" });
+      searchLink.current?.focus();
       router.refresh();
       return;
     }
@@ -51,7 +53,7 @@ export function BookingCancellation({ bookingId, initialStatus }: {
       )}
       {!cancelled && state.status === "error" && <p role="alert" className="mt-4 text-sm text-red-700">{state.message}</p>}
       {/* A fresh navigation avoids showing availability cached before cancellation. */}
-      <a href="/vehicles" className="mt-5 flex min-h-11 items-center underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">
+      <a ref={searchLink} href="/vehicles" className="mt-5 flex min-h-11 items-center underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">
         Search vehicles
       </a>
     </section>

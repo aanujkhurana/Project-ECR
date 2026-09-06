@@ -1,3 +1,4 @@
+import { getCustomerNameError } from "@/lib/customer-name";
 import { getTodayInBrisbane, validateDateRange } from "@/lib/dates";
 import { getRentalService } from "@/lib/server/get-rental-service";
 import type { ApiErrorResponse, BookingRequest, CreateBookingResponse } from "@/lib/types";
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
   if (
     typeof vehicle_id !== "number" || !Number.isSafeInteger(vehicle_id) || vehicle_id <= 0 ||
     typeof start_date !== "string" || typeof end_date !== "string" ||
-    typeof customer_name !== "string" || !customer_name.trim()
+    typeof customer_name !== "string" || getCustomerNameError(customer_name)
   ) return failure("invalid_request");
 
   try {

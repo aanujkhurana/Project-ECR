@@ -1,6 +1,7 @@
 import "server-only";
 import { VEHICLES } from "@/lib/api/fixtures";
 import type { RentalService } from "@/lib/api/rental-service";
+import { getCustomerNameError } from "@/lib/customer-name";
 import { getTodayInBrisbane, validateDateRange } from "@/lib/dates";
 import { getMockStore, type MockStore } from "@/lib/server/mock-store";
 import {
@@ -93,10 +94,11 @@ export function createMockRentalService({
     async createBooking(request) {
       await wait();
       const message = dateError(request);
-      if (message || !request.customer_name.trim() || !Number.isSafeInteger(request.vehicle_id)) {
+      const nameError = getCustomerNameError(request.customer_name);
+      if (message || nameError || !Number.isSafeInteger(request.vehicle_id) || request.vehicle_id <= 0) {
         return {
           ok: false,
-          error: { error: "invalid_request", message: message ?? "Enter a customer name and valid vehicle ID." },
+          error: { error: "invalid_request", message: message ?? nameError ?? "Enter a valid vehicle ID." },
         };
       }
       const vehicle = VEHICLES.find((item) => item.id === request.vehicle_id);
@@ -143,6 +145,9 @@ export function createMockRentalService({
 
     async cancelBooking(bookingId) {
       await wait();
+      if (!Number.isSafeInteger(bookingId) || bookingId <= 0) {
+        return { ok: false, error: { error: "invalid_request", message: "Enter a valid booking ID." } };
+      }
       const booking = store.bookings.get(bookingId);
       if (!booking) {
         return { ok: false, error: { error: "not_found", message: "This booking could not be found." } };
